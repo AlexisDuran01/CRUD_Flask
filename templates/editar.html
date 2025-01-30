@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %} Editar "{{ post['title'] }}" {% endblock %}
+
+{% block content %}
+<h1>Edit "{{ post['title'] }}" </h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="title">Titulo</label>
+        <input type="text" name="title" placeholder="Titulo del post"
+               class="form-control"
+               value="{{ request.form['title'] or post['title'] }}">
+        </input>
+          <!-- Aquí se establece el valor del campo de entrada:
+               - Primero intenta obtener el valor ingresado por el usuario en el formulario (request.form['title']).
+               - Si request.form['title'] no tiene valor (por ejemplo, cuando es una solicitud GET),
+                 utiliza el valor actual del título en la base de datos (post['title']).
+               Esto asegura que el formulario muestre el valor correcto según el contexto. -->
+    </div>
+
+    <div class="form-group">
+        <label for="content">Contenido</label>
+        <textarea name="content" placeholder="Contenido del post"
+                  class="form-control">{{ request.form['content'] or post['content'] }}</textarea>
+      <!-- Aquí se establece el contenido del área de texto:
+            - Primero intenta obtener el valor ingresado por el usuario en el formulario (request.form['content']).
+            - Si request.form['content'] no tiene valor (por ejemplo, cuando es una solicitud GET),
+              utiliza el valor actual del contenido en la base de datos (post['content']).
+            Esto permite que el área de texto muestre el contenido correcto según el contexto. -->
+                </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+    </div>
+</form>
+<hr>
+
+
+<form action="{{ url_for('delete', id=post['id']) }}" method="POST">
+    <!-- 
+    El atributo 'action' define la URL a la que se enviará el formulario cuando se haga submit.
+    En este caso, 'url_for('delete', id=post['id'])' genera la URL para la función de ruta 'delete'.
+    'post['id']' se pasa como valor al parámetro "id" que es el que esta en la funcion de ruta y se deben 
+    de llamar igual
+    -->
+    
+     <!-- 
+           El tipo de input es 'submit', lo que indica que este botón enviará el 
+           formulario cuando se haga clic.
+    -->
+    <input type="submit" value="Eliminar Post" class="btn btn-danger btn-sm" 
+          
+           onclick="return confirm('¿Estás seguro de eliminar este post?')">
+           <!-- 
+           El atributo 'onclick' tiene un evento JavaScript que ejecuta la función 'confirm()'.
+           Esto muestra un cuadro de confirmación al usuario con un mensaje
+           
+           Si el usuario hace clic en "Aceptar", la función devuelve 'true', permitiendo que el formulario
+           se envíe. 
+           
+           Si hace clic en "Cancelar", devuelve 'false', evitando que el formulario se envíe.
+           -->
+</form>
+
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+
+{% block title %} Crear un nuevo post {% endblock %}
+{% block content %}
+<h1 class="for">Crear un nuevo post</h1>
+
+<!-- Se indica el tipo de metodo -->
+<form method="post">
+    <div class="form">
+        <!-- Campo para el título del post -->
+        <label for="title">Titulo</label>
+        <input type="text" name="title"
+               placeholder="Titulo del post" class="form-control"
+               value="{{ request.form['title'] }}"></input>
+        <!-- Explicación:
+           - name="title"' define el nombre de la variable que se enviará al servidor
+             con el valor ingresado en este campo
+
+            - 'value="{{ request.form['title'] }}"' llena el campo con el valor previamente enviado si lo hay.
+            -->
+    </div>
+
+    <div class="form-group mt-2">
+        <!-- Campo para el contenido del post -->
+        <label for="content">Contenido</label>
+        <textarea name="content" placeholder="Contenido del post"
+                  class="form-control">{{ request.form['content'] }}</textarea>
+        <!-- Explicación:
+            - 'name="content"' define el nombre de la variable que se enviará al servidor
+             con el valor ingresado en este campo
+
+            - '{{ request.form['content'] }}' llena el campo con el valor previamente enviado si lo hay.
+        -->
+    </div>
+
+    <div class="form-group">
+        <!-- Botón para enviar el formulario -->
+        <button type="submit" class="btn btn-primary">Enviar</button>
+        <!-- Explicación:
+            - El tipo 'submit' indica que el botón enviará el formulario cuando se haga clic en él.
+        -->
+    </div>
+</form>
+
+{% endblock %}

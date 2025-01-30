@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %} Inicio {% endblock %}
+
+
+{% block content %}
+<h1 class="mt-2 ">Listado de post</h1>
+{%for post in posts %}
+<!-- Creamos un enlace utilizando la función `url_for()`. -->
+<!-- El primer argumento de `url_for()` es el nombre de la función de vista: 'post'. -->
+<!-- Dado que la función de vista `post()` acepta un argumento llamado `post_id`, se le proporciona el valor `post['id']`. -->
+<!-- Esto asegura que Flask genere automáticamente la URL adecuada para la entrada específica, basada en su ID. -->
+<a href="{{ url_for('post', post_id=post['id']) }}">
+    <h2>
+        {{post['title']}}
+    </h2>
+</a>
+
+
+<div class="d-flex align-items-center  gap-2">
+    <h4>
+        <span class="badge badge-success mr-1 mt-2">{{post['created']}} </span>
+    </h4>
+
+    <!-- 
+     'edit': Nombre de la vista o función de la ruta 
+    
+     (firma del metodo: @app.route('/editar/<int:post_id>', methods=('GET', 'POST'))
+                        def edit(post_id):.
+    
+    post_id=post['id']: El parámetro dinámico post_id que se pasa a la URL, 
+    cuyo valor es post['id'] y se pasa como argumento a la funcion de la ruta.
+    -->    
+
+
+    <!-- Botón "Editar" -->
+    <form action="{{ url_for('edit', post_id=post['id']) }}" method="GET" class="mr-1">
+        <button type="submit" class="btn btn-warning btn-sm " >Editar</button>
+    </form>
+
+    <!-- Botón "Eliminar" -->
+    <form action="{{ url_for('delete', id=post['id']) }}" method="POST" class="d-block">
+        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este post?')">Eliminar</button>
+    </form>
+</div>
+
+
+{% endfor %}
+{% endblock %}

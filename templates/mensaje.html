@@ -1,0 +1,29 @@
+<!--EL bloque with crear un contexto temporal para manejar variables, permitiendo 
+que su alcance esté limitado al bloque en el que se utiliza-->
+
+{% with msg = get_flashed_messages(with_categories=True) %}
+  <!-- Aquí se obtienen los mensajes almacenados en la sesión, con las categorías devueltos por la funcion. 
+       `with_categories=True` asegura que cada mensaje se almacene junto con su categoría (por ejemplo, 'danger', 'success'). -->
+  
+  {% if msg %}
+    <!-- Si hay mensajes flash disponibles, se entra en este bloque. -->
+  
+    {% for category, message in msg %}
+      <!-- Se recorre la lista de mensajes. `category` es la categoría del mensaje (como 'danger', 'success'), 
+           y `message` es el texto del mensaje. -->
+      
+      <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+        <!-- Se genera un `div` para cada mensaje con clases de Bootstrap que aplican estilos específicos:
+             `alert-{{category}}` aplica un estilo dependiendo de la categoría del mensaje (ej. `alert-danger` para errores, `alert-success` para éxito). -->
+        
+        <strong>{{ message }}</strong>
+        <!-- El mensaje real se inserta aquí, entre las etiquetas `<strong>` para hacerlo en negrita. -->
+        
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    
+    {% endfor %}
+  {% endif %}
+{% endwith %}
