@@ -26,6 +26,11 @@ from flask import Flask, render_template,request, url_for, flash, redirect
 
 from werkzeug.exceptions import abort 
 
+import logging  # Importa el módulo logging para gestionar registros (logs)
+from logging.handlers import RotatingFileHandler  # Importa un manejador de archivos rotativos para los logs
+import datetime  # Importa el módulo datetime para trabajar con fechas y horas
+
+
 def get_db_connection():
     conn=sqlite3.connect("database.db")
     conn.row_factory=sqlite3.Row
@@ -38,6 +43,7 @@ def get_post(post_id):
                             (post_id,)).fetchone()
     conexion.close()
     if post is None:
+        log_message(custom_logger, logging.WARNING, 'Registro no encontrado', username='admin')
         print('Registro no encontrado')
         abort(404)
 
@@ -74,10 +80,75 @@ app = Flask(__name__)
 # Es como una "contraseña" que asegura que los datos guardados en la sesión no puedan ser manipulados por los usuarios.
 app.config['SECRET_KEY'] = '12qwe3'
 
+# Definir la ubicación del archivo donde se guardarán los logs
+LOG_FILENAME = 'logs/events.log'
+
+# Definir el formato de los logs en una variable separada
+LOG_FORMAT = '%(asctime)s - Usuario: %(username)s - %(levelname)s - %(message)s'
+# Este formato define cómo se verán los logs en el archivo:
+# - %(asctime)s: Muestra la fecha y hora en que se generó el log, esto se genera automaticamente mediante el modulo logging
+# - %(username)s: Campo personalizado para el nombre del usuario. Si no se proporciona, se usará 'N/A'
+# - %(levelname)s: Nivel del log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+# - %(message)s: El mensaje del log, que describe el evento o acción que ocurrió
+
+# Función para formatear el mensaje de log con el campo 'username'
+def log_message(logger, level, message, username=None):
+    """
+    Registra un mensaje de log con un nombre de usuario opcional.
+    
+    Parámetros:
+        logger: El logger que se utilizará para registrar el mensaje.
+        level: El nivel del log (logging.DEBUG, logging.INFO, etc.).
+        message: El mensaje que se desea registrar.
+        username: El nombre del usuario (opcional). Si no se proporciona, se usa 'N/A'.
+    """
+    extra = {'username': username if username else 'N/A'}  # Si no hay usuario, se usa 'N/A'
+    logger.log(level, message, extra=extra)  # Registra el mensaje con el campo 'username'
+# Esta función permite agregar un nombre de usuario a los logs de manera opcional.
+# Si no se proporciona un nombre de usuario, se usa 'N/A' como valor predeterminado
+
+# Configurar el sistema de logging para guardar solo los logs personalizados en un archivo
+
+# 1. Crear un logger personalizado para la aplicación
+custom_logger = logging.getLogger('my_app_logger')
+# Este logger se usa para registrar los logs personalizados de tu aplicación.
+# Al crear un logger personalizado, puedes controlar qué logs se guardan y cómo se manejan
+
+custom_logger.setLevel(logging.DEBUG)  # Establecer el nivel de log a DEBUG
+# El nivel DEBUG captura todos los mensajes, desde el nivel más bajo hasta el más alto:
+# - DEBUG: Mensajes detallados para depuración (nivel 10).
+# - INFO: Información general sobre el funcionamiento de la aplicación (nivel 20).
+# - WARNING: Advertencias de posibles problemas que no detienen la aplicación (nivel 30).
+# - ERROR: Errores que no detienen el programa pero requieren atención (nivel 40).
+# - CRITICAL: Errores graves que pueden detener el programa (nivel 50).
+
+# 2. Crear un manejador de archivo rotativo para guardar los logs en un archivo
+file_handler = RotatingFileHandler(LOG_FILENAME, maxBytes=1024 * 1024)
+# Este manejador guarda los logs en un archivo y rota el archivo cuando alcanza un tamaño máximo
+# - LOG_FILENAME: La ruta del archivo donde se guardarán los logs
+# - maxBytes: El tamaño máximo del archivo antes de rotarlo (1 MB en este caso)
+
+file_handler.setFormatter(logging.Formatter(LOG_FORMAT))  # Aplicar el formato personalizado
+# El formato personalizado (LOG_FORMAT) se aplica a los logs que se guardan en el archivo
+
+
+# 3. Agregar el manejador de archivo al logger personalizado
+custom_logger.addHandler(file_handler)
+# Este paso asocia el manejador de archivo con el logger personalizado.
+# Ahora, cualquier log que se registre con `custom_logger` se guardará en el archivo
+
+# 4. Evitar que los logs personalizados se propaguen al logger raíz (para evitar duplicados en la consola)
+custom_logger.propagate = False
+# Esto evita que los logs personalizados se propaguen al logger raíz de Python
+# Si no se desactiva la propagación, los logs podrían duplicarse en la consola
+
+
 
 # Definimos una ruta para la URL raíz ('/').
 @app.route('/')
 def index():
+    # Registrar el inicio de la aplicación con un nombre de usuario 
+    log_message(custom_logger, logging.INFO, 'Inicio de la aplicación', username='admin')
     posts=get_allpost()
     return render_template("index.html", posts=posts)
 
@@ -92,7 +163,7 @@ def post(post_id):
     # Llamamos a la función `get_post()` con el ID especificado para obtener
     # la entrada del blog asociada. El resultado se almacena en la variable `post`.
     post = get_post(post_id)
-
+    log_message(custom_logger, logging.INFO, 'CONSULTA Registro', username='admin')
     # Renderizamos la plantilla 'post.html', pasando la información del post
     # para que pueda mostrarse en la interfaz de usuario.
     return render_template("post.html", post=post)
@@ -162,6 +233,7 @@ def create():
 
             #mostramos un mensaje de exito
             flash('Post creado correctamente', 'success')
+            log_message(custom_logger, logging.INFO, 'Registro CREADO', username='admin')
             # Redirigimos al índice después de guardar el post
             return redirect(url_for('index'))
 
@@ -206,7 +278,7 @@ def edit(post_id):
             conn.commit()
             # Cierra la conexión con la base de datos.
             conn.close()
-
+            log_message(custom_logger, logging.INFO, 'Registro EDITADO', username='admin')
             flash('Post actualizado correctamente', 'success')
 
             # Redirige al usuario a la página principal después de actualizar el post.
@@ -226,6 +298,7 @@ def delete(id):
     # Esto reemplaza '{}' con el valor del título del post, por ejemplo, si el título es "My Post", 
     # el mensaje resultante será "My Post fue eliminado correctamente".
     flash('"{}" fue elimado correctamente'.format(post['title']),"success")
+    log_message(custom_logger, logging.INFO, 'Registro ELIMINADO', username='admin')
     return redirect(url_for('index')) 
 
 # Este bloque garantiza que el servidor web solo se inicie
